@@ -174,11 +174,23 @@ class CurrencyRatesCRUD:
     def _delete(self, currency_id: int) -> None:
         """Удаляет валюту по идентификатору.
 
+        Перед удалением самой валюты каскадно удаляются все подписки
+        пользователей на неё из таблицы ``user_currency`` — иначе
+        внешний ключ ``currency_id`` в ``user_currency`` заблокировал бы
+        удаление (``sqlite3.IntegrityError: FOREIGN KEY constraint
+        failed``), так как поддержка внешних ключей включена
+        (``PRAGMA foreign_keys = ON``).
+
         Args:
             currency_id: Идентификатор записи в таблице ``currency``.
         """
-        sql = "DELETE FROM currency WHERE id = ?"
-        self.__con.execute(sql, (int(currency_id),))
+        self.__con.execute(
+            "DELETE FROM user_currency WHERE currency_id = ?",
+            (int(currency_id),),
+        )
+        self.__con.execute(
+            "DELETE FROM currency WHERE id = ?", (int(currency_id),)
+        )
         self.__con.commit()
 
 

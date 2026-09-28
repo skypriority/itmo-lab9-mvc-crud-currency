@@ -56,7 +56,7 @@ currency_controller = CurrencyController(currency_crud)
 user_controller = UserController(user_crud)
 
 #: Данные об авторе работы, отображаемые на страницах приложения.
-main_author = Author("Дмитрий Скраев", "P34111")
+main_author = Author("Дмитрий Кравцов", "P3120")
 
 pages = PagesController(env, main_author, currency_controller, user_controller)
 
@@ -81,12 +81,15 @@ def seed_demo_data() -> None:
 
     user1_id = user_crud._create("Николай")
     user2_id = user_crud._create("Мария")
+    user3_id = user_crud._create("Ирина")
 
     usd_id = currency_crud._read(char_code="USD")[0]["id"]
     eur_id = currency_crud._read(char_code="EUR")[0]["id"]
+    gbp_id = currency_crud._read(char_code="GBP")[0]["id"]
     user_crud.subscribe(user1_id, usd_id)
     user_crud.subscribe(user1_id, eur_id)
     user_crud.subscribe(user2_id, eur_id)
+    user_crud.subscribe(user3_id, gbp_id)
 
 
 seed_demo_data()
@@ -152,8 +155,15 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/currency/update":
-            char_code = query["char_code"][0]
-            value = float(query["value"][0])
+            # Поддерживаются два формата запроса:
+            #   /currency/update?char_code=USD&value=99.5 (явный, основной)
+            #   /currency/update?USD=99.5 (короткий формат из задания)
+            if "char_code" in query and "value" in query:
+                char_code = query["char_code"][0]
+                value = float(query["value"][0])
+            else:
+                char_code, raw_value = next(iter(query.items()))
+                value = float(raw_value[0])
             currency_controller.update_currency(char_code, value)
             self._send_html(
                 pages.render_currencies(

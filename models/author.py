@@ -45,7 +45,7 @@ class Author:
 
     @group.setter
     def group(self, group: str) -> None:
-        if isinstance(group, str) and len(group) > 5:
+        if isinstance(group, str) and len(group) >= 5:
             self.__group = group
         else:
             raise ValueError("Ошибка при задании группы автора")

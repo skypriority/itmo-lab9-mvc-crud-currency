@@ -12,14 +12,14 @@ class TestAuthor(unittest.TestCase):
 
     def test_valid_author(self) -> None:
         """Корректные имя и группа должны сохраниться без ошибок."""
-        author = Author("Николай", "P34111")
-        self.assertEqual(author.name, "Николай")
-        self.assertEqual(author.group, "P34111")
+        author = Author("Дмитрий Кравцов", "P3120")
+        self.assertEqual(author.name, "Дмитрий Кравцов")
+        self.assertEqual(author.group, "P3120")
 
     def test_invalid_name_raises(self) -> None:
         """Слишком короткое имя должно вызывать ValueError."""
         with self.assertRaises(ValueError):
-            Author("Н", "P3411")
+            Author("Н", "P3120")
 
     def test_invalid_group_raises(self) -> None:
         """Слишком короткая группа должна вызывать ValueError."""

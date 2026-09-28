@@ -82,6 +82,27 @@ class TestDatabaseControllerIntegration(unittest.TestCase):
 
         self.assertEqual(self.currency_crud._read(), [])
 
+    def test_currency_delete_cascades_subscriptions(self) -> None:
+        """Удаление валюты с подписчиками не должно нарушать FOREIGN KEY.
+
+        Перед удалением валюты должны каскадно удаляться связанные
+        записи в ``user_currency``, иначе включённая поддержка внешних
+        ключей (``PRAGMA foreign_keys = ON``) выбросит
+        ``sqlite3.IntegrityError``.
+        """
+        self.currency_crud._create(
+            [{"num_code": "840", "char_code": "USD", "name": "USD",
+              "value": 90.0, "nominal": 1}]
+        )
+        currency_id = self.currency_crud._read()[0]["id"]
+        user_id = self.user_crud._create("Николай")
+        self.user_crud.subscribe(user_id, currency_id)
+
+        self.currency_crud._delete(currency_id)
+
+        self.assertEqual(self.currency_crud._read(), [])
+        self.assertEqual(self.user_crud.get_subscribed_currencies(user_id), [])
+
     def test_user_currency_subscription_via_foreign_keys(self) -> None:
         """Подписка пользователя на валюту должна работать через JOIN."""
         self.currency_crud._create(
